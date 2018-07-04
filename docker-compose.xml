@@ -1,0 +1,50 @@
+version: '3'
+networks:
+  dhis-rw:
+
+services:
+  postgres-db:
+    container_name: database
+    image: mdillon/postgis:9.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dhis
+      POSTGRES_DB: dhis
+      POSTGRES_PASSWORD: dhis
+      POSTGRES_DB_TARGET: dhis-target
+      PG_DATA: /var/lib/postgresql/data/pgdata:z
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dhis-rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h database -p 5432 -d dhis2"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  dhis-web:
+    container_name: dhis2-web
+    image: dhis2/dhis2-web:2.26-tomcat7-jre8-latest
+    restart: unless-stopped
+    environment:
+      JAVA_OPTS: "-Xmx1024m -Xms4000m"
+      POSTGRES_DB: dhis
+    ports:
+      - "8080:8080"
+    networks:
+      - dhis-rw
+    depends_on:
+      - postgres-db
+    entrypoint: ./wait-for-it.sh -t 0 postgres-db:5432 --
+    command: catalina.sh run # https://github.com/docker/compose/issues/3140
+    healthcheck:
+     test: "curl -f http://dhis-web:8080"
+     interval: 30s
+     timeout: 30s
+     retries: 3
+
+volumes:
+  postgres-data:
+
