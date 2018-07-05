@@ -2,8 +2,8 @@
 
 - docker-compose
 - docker images
-- docker cp ~/Downloads/smt-dhis-backup.sql <imageId>:/
-- docker exec -it <imageId> bash
+- docker cp ~/Downloads/smt-dhis-backup.sql imageId:/
+- docker exec -it imageId bash
 - su postgres
 - psql dhis
 - drop database dhis
